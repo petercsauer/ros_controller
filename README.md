@@ -65,6 +65,8 @@
 ##### Renders
 - Full Assembly ![Full Assembly](./Hardware/Renders/FullAssembly.jpg "Full Assembly")
 - Back Assembly ![Back Assembly](./Hardware/Renders/Back.jpg "Back Assembly")
+- Front Assembly (Side View) ![Front Assembly](./Hardware/Renders/FrontSide.jpg "Front Assembly")
+- Front Assembly (Back View) ![Front Assembly](./Hardware/Renders/BackofFront.jpg "Front Assembly")
 
 
 
