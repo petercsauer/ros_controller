@@ -1,7 +1,12 @@
+#!/usr/bin/env python3
+
 import sys, pygame
 import pygame.gfxdraw
 import pygame.freetype
 from pygame_vkeyboard import *
+import rospy
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Pose
 
 
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
@@ -47,12 +52,12 @@ class Button:
         self.rect = rect
         self.text = text
 
-        circular14 = pygame.freetype.Font("CircularStd-Bold.ttf",14)
+        circular14 = pygame.freetype.Font(".//home/pi/.fonts/CircularStd-Bold.ttf",14)
         p_rect = pygame.rect.Rect(rect)
         draw_rounded_rect(surface, p_rect, (200,200,200),18)
 
     def render_button(self, mouse):
-        circular14 = pygame.freetype.Font("CircularStd-Bold.ttf",14)
+        circular14 = pygame.freetype.Font(".//home/pi/.fonts/CircularStd-Bold.ttf",14)
 
         p_rect = pygame.rect.Rect(self.rect)
         if mouse[0] < self.rect[0]+self.rect[2] and mouse[0]> self.rect[0] and mouse[1] < self.rect[1]+self.rect[3] and mouse[1] > self.rect[1]:
@@ -95,14 +100,14 @@ class IconButton:
 
 class ServiceMenuItem:
     def __init__(self, surface, id, package, service, interface):
-        self.w = 310
-        self.h = 80
+        self.w = 230
+        self.h = 60
         self.package = package
         self.service = service
         self.surface = surface
         self.id = id
-        self.rect = pygame.rect.Rect(40,100+100*id,self.w,self.h)
-        self.button = IconButton(surface, (self.w+10,int(self.h/2)+100+100*id), 20, "play.png")
+        self.rect = pygame.rect.Rect(40,100+80*id,self.w,self.h)
+        self.button = IconButton(surface, (self.w+10,int(self.h/2)+100+80*id), 20, "/home/pi/control_ws/src/control/play.png")
         self.submit = 0
         layout = VKeyboardLayout(VKeyboardLayout.QWERTY)
         self.keyboard = VKeyboard(self.surface, self.consumer, layout)
@@ -114,10 +119,10 @@ class ServiceMenuItem:
         else:
             draw_rounded_rect(self.surface, self.rect, (230,230,230),15)
 
-        self.circular16 = pygame.freetype.Font("CircularStd-Bold.ttf",20)
-        self.circular12 = pygame.freetype.Font("CircularStd-Bold.ttf",16)        
-        self.circular12.render_to(self.surface, (60, 123+100*self.id), self.package, (50,50,50))        
-        self.circular16.render_to(self.surface, (60, 142+100*self.id), self.service, (0,0,0))
+        self.circular16 = pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",16)
+        self.circular12 = pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",12)        
+        self.circular12.render_to(self.surface, (60, 116+80*self.id), self.package, (50,50,50))        
+        self.circular16.render_to(self.surface, (60, 130+80*self.id), self.service, (0,0,0))
         self.button.render_button(mouse)
         self.keyboard.update(events)
         if self.window:
@@ -138,7 +143,7 @@ class ServiceMenuItem:
         self.window=True
         width = 800
         height = 600
-        rect = pygame.rect.Rect((1872-width)/2, (1000-height)/2, width, height/2)
+        rect = pygame.rect.Rect((1872-width)/2, (1000-height)/2-100, width, height/2)
         draw_rounded_rect(self.surface,rect,(200,200,200), 15)
         
         txt_rect = pygame.rect.Rect((1872-width)/2+20, (1000-height)/2+100, width-40, 35)
@@ -160,29 +165,38 @@ class ServiceMenuItem:
     
 class Interface:
     def __init__(self, pygame):
-        
+        self.odom_sub = rospy.Subscriber("odom", Odometry, self.odomCallback)
+        self.odom = Pose()
+        self.odom.position.x = 0
+        self.odom.position.y = 0
+        self.odom.orientation.z = 0
         self.pygame = pygame
         self.pygame.font.init()
-        self.circular20 = self.pygame.freetype.Font("CircularStd-Bold.ttf",28)
-        FONT= self.pygame.freetype.Font("CircularStd-Bold.ttf",14)
+        print(self.pygame.font.match_font("CircularStd-Bold"))
+        self.circular20 = self.pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",26)
+        self.circular14= self.pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",20)
 
-        self.size = self.width, self.height = 1872, 1404
+        self.size = self.width, self.height = 1872, 1000
         speed = [2, 2]
         self.BLACK = (0, 0, 0)
         self.WHITE = (255,255,255)
 
-        self.screen = pygame.display.set_mode(self.size)
+        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
         self.menu = []
 
         self.reset()
+        
+    def odomCallback(self, msg):
+        self.odom = msg.pose.pose
+        print(self.odom)
 
 
     def reset(self):
 
-        srv_rect = self.pygame.rect.Rect(20,20,350,self.height-40)
-        console_rect = self.pygame.rect.Rect(810,20,self.width-810-20,self.height-40)
-        cntrl_rect = self.pygame.rect.Rect(390,20,400,self.height-40)
+        srv_rect = self.pygame.rect.Rect(20,20,270,self.height-40)
+        console_rect = self.pygame.rect.Rect(730,20,self.width-730-20,self.height-40)
+        cntrl_rect = self.pygame.rect.Rect(310,20,400,self.height-40)
 
         self.screen.fill(self.WHITE)
         draw_rounded_rect(self.screen, srv_rect, self.BLACK, 20)
@@ -190,12 +204,24 @@ class Interface:
         draw_rounded_rect(self.screen, console_rect, self.BLACK, 20)
 
         self.circular20.render_to(self.screen, (50,50), "ROS Services", self.WHITE)
-        self.circular20.render_to(self.screen, (835,50), "Console", self.WHITE)
-        self.circular20.render_to(self.screen, (415,50), "Basic Controls", self.WHITE)
+        self.circular20.render_to(self.screen, (760,50), "Console", self.WHITE)
+        self.circular20.render_to(self.screen, (340,50), "Basic Controls", self.WHITE)
 
         self.menu.append(ServiceMenuItem(self.screen, 0, "turtlesim", "translate", self))
         self.menu.append(ServiceMenuItem(self.screen, 1, "controller", "forward", self))
         self.menu.append(ServiceMenuItem(self.screen, 2, "controller", "backward", self))
+        
+    def info_module(self, name, info_array, x, y):
+        info_rect = self.pygame.rect.Rect(x,y,200,200)
+        info_title_rect = self.pygame.rect.Rect(x+10,y+10,25*len(name),40)
+        
+        draw_rounded_rect(self.screen, info_rect, self.WHITE, 20)
+        draw_rounded_rect(self.screen, info_title_rect, self.BLACK, 15)
+
+        self.circular20.render_to(self.screen, (x+25,y+20), name, self.WHITE)
+        for i in range(int(len(info_array)/2)):
+            self.circular14.render_to(self.screen, (x+20,y+60+20*i), info_array[i*2]+str(info_array[2*i+1]), self.BLACK)
+          
 
     def refresh(self):
         mouse = self.pygame.mouse.get_pos() 
@@ -209,14 +235,34 @@ class Interface:
             if event.type == self.pygame.MOUSEBUTTONDOWN: 
                 for m in self.menu:
                     m.check_click(mouse)
+                    
+        console_rect = self.pygame.rect.Rect(730,20,self.width-730-20,self.height-40)
+        draw_rounded_rect(self.screen, console_rect, self.BLACK, 20)
+        self.circular20.render_to(self.screen, (760,50), "Console", self.WHITE)
+
+        
+        
+        self.info_module("Odom",["x: ", self.odom.position.x, "y: ", self.odom.position.y,"theta: ",self.odom.orientation.z],760,100)
+        self.info_module("Odom",["x: ", self.odom.position.x, "y: ", self.odom.position.y,"theta: ",self.odom.orientation.z],980,100)
+
+
+
+
+
+
+
+        
 
 
         self.pygame.display.update()
 
 
-pygame.init()
 
-interface = Interface(pygame)
+if __name__ == '__main__':
+    pygame.init()
+    rospy.init_node("interface")
+    interface = Interface(pygame)
+    
 
-while True:
-        interface.refresh()
+    while True:
+            interface.refresh()

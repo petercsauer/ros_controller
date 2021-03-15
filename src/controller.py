@@ -2,13 +2,11 @@
 
 from pynput.mouse import Button, Controller
 import qwiic_joystick
-import pygame
 import time
 import sys
 import rospy
-from geometry_msgs.msg import Twist 
-
-# import interface
+from geometry_msgs.msg import Twist, Vector3
+import tkinter as tk
 
 class Control:
     def __init__(self):
@@ -17,7 +15,7 @@ class Control:
         self.vertical1 = 0.0
         self.button1 = False
         self.mouse = Controller()
-        # self.cmd_pub = rospy.Publisher("cmd_vel", Twist, queue_size=0)
+        self.cmd_pub = rospy.Publisher("cmd_vel", Twist, queue_size=0)
         self.timer = rospy.Time.now()
         self.mode = 1
 
@@ -41,11 +39,11 @@ class Control:
 
     def controlRobot(self):
         speed = 100
-    #     if self.joy1.connected:
-    #         x_dot = self.joy.vertical/speed-5.18
-    #         omega = -self.joy.horizontal/speed+5.01
-    #         twist = Twist(linear = Vector3(x = xdot, y = 0, z = 0), angular = Vector3(x = 0, y = 0, z = omega))
-    #         self.cmd_pub.publish(twist)
+        if self.joy1.connected:
+            omega = self.joy1.vertical/speed-5.18
+            xdot = -self.joy1.horizontal/speed+5.01
+            twist = Twist(linear = Vector3(x = xdot, y = 0, z = 0), angular = Vector3(x = 0, y = 0, z = omega))
+            self.cmd_pub.publish(twist)
 
     def checkControl(self):
         if not self.joy1.button:
@@ -62,17 +60,14 @@ class Control:
             self.timer = rospy.Time.now()
 
 
+    
 
-
-pygame.init()
-
-# interface = Interface(pygame)
 
 if __name__ == '__main__':
     rospy.init_node("controller")
     c = Control()
+
     while not rospy.is_shutdown():
-        print(c.mode)
         c.checkControl()
         if c.mode:
             c.controlMouse()
