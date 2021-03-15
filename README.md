@@ -63,7 +63,7 @@
 - Hardware/DXF: The DXF files for the different laser cut panels that make up the casing
 
 ##### Renders
-
+![alt text](./Hardware/Renders/FullAssembly.jpg "Full Assembly")
 
 
 
