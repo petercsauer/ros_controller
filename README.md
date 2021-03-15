@@ -64,7 +64,7 @@
 
 ##### Renders
 - Full Assembly ![Full Assembly](./Hardware/Renders/FullAssembly.jpg "Full Assembly")
-- Back Assembly ![Back Assembly](./Hardware/Renders/Back 2.jpg "Back Assembly")
+- Back Assembly ![Back Assembly](./Hardware/Renders/Back.jpg "Back Assembly")
 
 
 
