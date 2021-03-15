@@ -38,10 +38,10 @@ class Control:
 
 
     def controlRobot(self):
-        speed = 100
+        speed = 300
         if self.joy1.connected:
-            omega = self.joy1.vertical/speed-5.18
-            xdot = -self.joy1.horizontal/speed+5.01
+            omega = (self.joy1.vertical-518)/speed
+            xdot = (self.joy1.horizontal-501)/speed
             twist = Twist(linear = Vector3(x = xdot, y = 0, z = 0), angular = Vector3(x = 0, y = 0, z = omega))
             self.cmd_pub.publish(twist)
 

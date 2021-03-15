@@ -7,7 +7,7 @@ from pygame_vkeyboard import *
 import rospy
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose
-
+from sensor_msgs.msg import JointState
 
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
@@ -166,6 +166,8 @@ class ServiceMenuItem:
 class Interface:
     def __init__(self, pygame):
         self.odom_sub = rospy.Subscriber("odom", Odometry, self.odomCallback)
+        self.js_sub = rospy.Subscriber("joint_states", JointState, self.jsCallback)
+        self.enc = [0,0]
         self.odom = Pose()
         self.odom.position.x = 0
         self.odom.position.y = 0
@@ -176,7 +178,7 @@ class Interface:
         self.circular20 = self.pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",26)
         self.circular14= self.pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",20)
 
-        self.size = self.width, self.height = 1872, 1000
+        self.size = self.width, self.height = 1872, 1404
         speed = [2, 2]
         self.BLACK = (0, 0, 0)
         self.WHITE = (255,255,255)
@@ -189,8 +191,9 @@ class Interface:
         
     def odomCallback(self, msg):
         self.odom = msg.pose.pose
-        print(self.odom)
-
+        
+    def jsCallback(self, msg):
+        self.enc = msg.position
 
     def reset(self):
 
@@ -213,7 +216,7 @@ class Interface:
         
     def info_module(self, name, info_array, x, y):
         info_rect = self.pygame.rect.Rect(x,y,200,200)
-        info_title_rect = self.pygame.rect.Rect(x+10,y+10,25*len(name),40)
+        info_title_rect = self.pygame.rect.Rect(x+10,y+10,40+15*len(name),40)
         
         draw_rounded_rect(self.screen, info_rect, self.WHITE, 20)
         draw_rounded_rect(self.screen, info_title_rect, self.BLACK, 15)
@@ -242,8 +245,10 @@ class Interface:
 
         
         
-        self.info_module("Odom",["x: ", self.odom.position.x, "y: ", self.odom.position.y,"theta: ",self.odom.orientation.z],760,100)
-        self.info_module("Odom",["x: ", self.odom.position.x, "y: ", self.odom.position.y,"theta: ",self.odom.orientation.z],980,100)
+        self.info_module("Robot",["name: ", "turtlebot", "ip: ", "192.0.0.1","type: ","diff_drive"],760,100)
+        self.info_module("Encoders",["Left: ", round(self.enc[0],4), "Right: ", round(self.enc[1],4)],980,100)
+        self.info_module("Odom",["x: ", round(self.odom.position.x,4), "y: ", round(self.odom.position.y,4),"theta: ",round(self.odom.orientation.z,4)],760,320)
+
 
 
 
