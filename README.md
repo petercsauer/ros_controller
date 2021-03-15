@@ -54,6 +54,17 @@
 - 10-32 Machine Nuts (4x)
 - Double Sided 3M Foam Tape
 
+### CAD
+##### CAD Files
+- The CAD files for this project are located in the Hardware directory of this repository
+- Hardware/Assemblies/FullAssembly.sldasm: The Full controller assembly
+- Hardware/Assemblies/FrontAssembly.sldasm: The assembly of the front screen and joystick controllers
+- Hardware/Assemblies/BackAssembly.sldasm: The assembly of the RPi4 and HDMI Interface boards
+- Hardware/DXF: The DXF files for the different laser cut panels that make up the casing
+
+##### Renders
+
+
 
 
 
