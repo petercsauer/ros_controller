@@ -20,6 +20,7 @@
 # Info Modules
 - Info modules have been created to allow the developer to easily display useful data from the robot.
 - In this example, the robots pose, and encoder data is published here as well as some useful data about the robot.
+- Video Demo: https://drive.google.com/file/d/15SdiNfREKb_fW5fE0ccX29e9Vm0oG_x4/view?usp=sharing
 
 # Service Modules
 - Service modules have been created to allow the developer to easily test different services offered by the robot.
