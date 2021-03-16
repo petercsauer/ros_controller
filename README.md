@@ -19,6 +19,11 @@ The ROS Controller was created as a part of a MSR @ Northwestern winter project.
 - Can switch between mouse control and velocity control modes by holding down the joystick button for 2 seconds.
 - Video Demo: https://drive.google.com/file/d/1apWOIeSkuBDc_xTBUmET32rqAUC1X6jY/view?usp=sharing
 
+##### Joystick Control Mode 
+- In this mode, the left joystick controls the menu selection options in the interface
+- This can be used to press the menu buttons in the application and run services or remote options.
+- Can switch between joystick control and velocity control modes by holding down the joystick button for 2 seconds.
+
 ##### Velocity Control Mode
 - In this mode, the left joystick sends cmd_vel commands to any connected robot
 - This can be useful to drive around a diff drive style of robot.
@@ -59,6 +64,7 @@ The ROS Controller was created as a part of a MSR @ Northwestern winter project.
 ##### Controller
 - the controller node publishes cmd_vels from the left joystick when in Velocity control mode.
 - it also allows the user to control the mouse using pynput when in Mouse control mode.
+- the controller node also publishes an array of buttons and which one is selected currently by the joystick
 
 ## Hardware
 ### BOM
