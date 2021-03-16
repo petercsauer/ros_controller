@@ -8,6 +8,7 @@ import rospy
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import JointState
+from geometry_msgs.msg import Twist, Vector3
 
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
@@ -52,12 +53,12 @@ class Button:
         self.rect = rect
         self.text = text
 
-        circular14 = pygame.freetype.Font(".//home/pi/.fonts/CircularStd-Bold.ttf",14)
+        circular14 = pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",14)
         p_rect = pygame.rect.Rect(rect)
         draw_rounded_rect(surface, p_rect, (200,200,200),18)
 
     def render_button(self, mouse):
-        circular14 = pygame.freetype.Font(".//home/pi/.fonts/CircularStd-Bold.ttf",14)
+        circular14 = pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",14)
 
         p_rect = pygame.rect.Rect(self.rect)
         if mouse[0] < self.rect[0]+self.rect[2] and mouse[0]> self.rect[0] and mouse[1] < self.rect[1]+self.rect[3] and mouse[1] > self.rect[1]:
@@ -66,6 +67,36 @@ class Button:
             draw_rounded_rect(self.surface, p_rect, (200,200,200),18)
 
         circular14.render_to(self.surface, (self.rect[0]+10, self.rect[1]+15), self.text, (0,0,0))
+    
+    def check_click(self, mouse):
+        if mouse[0] < self.rect[0]+self.rect[2] and mouse[0]> self.rect[0] and mouse[1] < self.rect[1]+self.rect[3] and mouse[1] > self.rect[1]:
+            return 1
+        else:
+            return 0
+        
+class ControlButton:
+    def __init__(self, surface, rect, text):
+        self.surface = surface
+        self.rect = rect
+        self.text = text
+
+        circular14 = pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",26)
+        p_rect = pygame.rect.Rect(rect)
+        draw_rounded_rect(surface, p_rect, (200,200,200),18)
+
+    def render_button(self, mouse):
+        circular14 = pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",26)
+
+        p_rect = pygame.rect.Rect(self.rect)
+        t_rect = circular14.get_rect(self.text, size = 26)
+        t_rect.center = p_rect.center 
+
+        if mouse[0] < self.rect[0]+self.rect[2] and mouse[0]> self.rect[0] and mouse[1] < self.rect[1]+self.rect[3] and mouse[1] > self.rect[1]:
+            draw_rounded_rect(self.surface, p_rect, (255,255,255),18)
+        else:
+            draw_rounded_rect(self.surface, p_rect, (200,200,200),18)
+
+        circular14.render_to(self.surface, t_rect, self.text, (0,0,0))
     
     def check_click(self, mouse):
         if mouse[0] < self.rect[0]+self.rect[2] and mouse[0]> self.rect[0] and mouse[1] < self.rect[1]+self.rect[3] and mouse[1] > self.rect[1]:
@@ -174,19 +205,29 @@ class Interface:
         self.odom.orientation.z = 0
         self.pygame = pygame
         self.pygame.font.init()
+        self.modules = rospy.get_param("/interface/modules")
+        self.buttons = rospy.get_param("/interface/buttons")
+
+        print("MOD:"+str(self.modules['odom']))
         print(self.pygame.font.match_font("CircularStd-Bold"))
         self.circular20 = self.pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",26)
         self.circular14= self.pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",20)
 
-        self.size = self.width, self.height = 1872, 1404
+        self.size = self.width, self.height = 1872, 1300
         speed = [2, 2]
         self.BLACK = (0, 0, 0)
         self.WHITE = (255,255,255)
 
-        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode(self.size)
 
         self.menu = []
+        self.control_buttons = []
 
+        for i in range(len(self.buttons['id'])):
+            b_rect = self.pygame.rect.Rect(330,100+120*i,360,100)
+            b = ControlButton(self.screen, b_rect, self.buttons['text'][i])
+            self.control_buttons.append(b)
+            
         self.reset()
         
     def odomCallback(self, msg):
@@ -231,6 +272,8 @@ class Interface:
         events = self.pygame.event.get()
         for m in self.menu:
             m.render(mouse, events)
+        for b in self.control_buttons:
+            b.render_button(mouse)
         for event in events:
             if event.type==self.pygame.QUIT:
                 self.pygame.quit()
@@ -238,17 +281,47 @@ class Interface:
             if event.type == self.pygame.MOUSEBUTTONDOWN: 
                 for m in self.menu:
                     m.check_click(mouse)
+                for i in range(len(self.control_buttons)):
+                    if self.control_buttons[i].check_click(mouse):
+                        pubtype = 0
+                        if self.buttons['type'][i] == "Twist":
+                            pubtype = Twist
+                        if self.buttons['type'][i] == "Twist":
+                            print(self.buttons['publishes'][i]['linear']['x'])
+                            publishes = Twist(linear = Vector3(x = self.buttons['publishes'][i]['linear']['x'], y = self.buttons['publishes'][i]['linear']['y'], z = self.buttons['publishes'][i]['linear']['z']), angular = Vector3(x = self.buttons['publishes'][i]['angular']['x'], y = self.buttons['publishes'][i]['angular']['y'], z = self.buttons['publishes'][i]['angular']['z']))
+
+                        pub = rospy.Publisher(self.buttons['publisher'][i], pubtype, queue_size=0)
+                        pub.publish(publishes)
+                        
                     
         console_rect = self.pygame.rect.Rect(730,20,self.width-730-20,self.height-40)
         draw_rounded_rect(self.screen, console_rect, self.BLACK, 20)
         self.circular20.render_to(self.screen, (760,50), "Console", self.WHITE)
 
+        i = 0
+        j = 0
+        if self.modules['name']:
+            self.info_module("Robot",["name: ", "turtlebot", "ip: ", "192.0.0.1","type: ","diff_drive"],760+220*i,100+220*j) 
+            i+=1
+            if i>3:
+                i = 0
+                j+=1
+        if self.modules['encoders']:
+            self.info_module("Encoders",["Left: ", round(self.enc[0],4), "Right: ", round(self.enc[1],4)],760+220*i,100+220*j)
+            i+=1
+            if i>3:
+                i = 0
+                j+=1
+        if self.modules['odom']:
+            self.info_module("Odom",["x: ", round(self.odom.position.x,4), "y: ", round(self.odom.position.y,4),"theta: ",round(self.odom.orientation.z,4)],760+220*i,100+220*j)
+            i+=1
+            if i>3:
+                i = 0
+                j+=1
+                
         
+            
         
-        self.info_module("Robot",["name: ", "turtlebot", "ip: ", "192.0.0.1","type: ","diff_drive"],760,100)
-        self.info_module("Encoders",["Left: ", round(self.enc[0],4), "Right: ", round(self.enc[1],4)],980,100)
-        self.info_module("Odom",["x: ", round(self.odom.position.x,4), "y: ", round(self.odom.position.y,4),"theta: ",round(self.odom.orientation.z,4)],760,320)
-
 
 
 

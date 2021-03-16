@@ -1,0 +1,28 @@
+---
+modules:
+  odom: true
+  encoders: true
+  name: false
+
+buttons:
+  id: [0, 1]
+  text: ["Stop", "Turn Left"]
+  publisher: ["cmd_vel", "cmd_vel"]
+  type: ["Twist", "Twist"]
+  publishes: 
+    - angular: 
+        x: 0
+        y: 0
+        z: 0
+      linear:
+        x: 0
+        y: 0
+        z: 0
+    - angular: 
+        x: 0
+        y: 0
+        z: 0
+      linear:
+        x: 0
+        y: 0
+        z: 1

@@ -35,6 +35,10 @@ class Control:
                 self.mouse.click(Button.left, 1)
                 time.sleep(0.5)
             self.mouse.move(self.joy1.vertical/speed-5.18, -self.joy1.horizontal/speed+5.01)
+            
+    def controlButtons(self):
+        if self.joy1.connected:
+            self.joy1.begin()
 
 
     def controlRobot(self):
