@@ -8,7 +8,9 @@ import rospy
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import JointState
+from std_msgs.msg import Int32MultiArray
 from geometry_msgs.msg import Twist, Vector3
+import numpy as np
 
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
@@ -69,7 +71,7 @@ class Button:
         circular14.render_to(self.surface, (self.rect[0]+10, self.rect[1]+15), self.text, (0,0,0))
     
     def check_click(self, mouse):
-        if mouse[0] < self.rect[0]+self.rect[2] and mouse[0]> self.rect[0] and mouse[1] < self.rect[1]+self.rect[3] and mouse[1] > self.rect[1]:
+        if mouse == 2:
             return 1
         else:
             return 0
@@ -91,15 +93,15 @@ class ControlButton:
         t_rect = circular14.get_rect(self.text, size = 26)
         t_rect.center = p_rect.center 
 
-        if mouse[0] < self.rect[0]+self.rect[2] and mouse[0]> self.rect[0] and mouse[1] < self.rect[1]+self.rect[3] and mouse[1] > self.rect[1]:
-            draw_rounded_rect(self.surface, p_rect, (255,255,255),18)
+        if mouse == 1 or mouse == 2:
+            draw_rounded_rect(self.surface, p_rect, (180,180,180),18)
         else:
-            draw_rounded_rect(self.surface, p_rect, (200,200,200),18)
+            draw_rounded_rect(self.surface, p_rect, (255,255,255),18)
 
         circular14.render_to(self.surface, t_rect, self.text, (0,0,0))
     
     def check_click(self, mouse):
-        if mouse[0] < self.rect[0]+self.rect[2] and mouse[0]> self.rect[0] and mouse[1] < self.rect[1]+self.rect[3] and mouse[1] > self.rect[1]:
+        if mouse == 2:
             return 1
         else:
             return 0
@@ -113,8 +115,8 @@ class IconButton:
         self.radius = radius
 
     def render_button(self, mouse):
-        if mouse[0] < self.pos[0]+self.radius and mouse[0]> self.pos[0]-self.radius and mouse[1] < self.pos[1]+self.radius and mouse[1] > self.pos[1] - self.radius:
-            pygame.draw.circle(self.surface, (200,200,200), self.pos, self.radius)
+        if mouse == 1 or mouse == 2:
+            pygame.draw.circle(self.surface, (180,180,180), self.pos, self.radius)
             self.surface.blit(self.icon, (self.pos[0]-self.radius/2.4, self.pos[1]-self.radius/2)) 
 
         else:
@@ -123,7 +125,7 @@ class IconButton:
 
     
     def check_click(self, mouse):
-        if mouse[0] < self.pos[0]+self.radius and mouse[0]> self.pos[0]-self.radius and mouse[1] < self.pos[1]+self.radius and mouse[1] > self.pos[1] - self.radius:
+        if mouse == 2:
             return 1
         else:
             return 0
@@ -145,16 +147,16 @@ class ServiceMenuItem:
         self.window = False
         
     def render(self, mouse, events):
-        if mouse[0] < self.rect[0]+self.rect[2] and mouse[0]> self.rect[0] and mouse[1] < self.rect[1]+self.rect[3] and mouse[1] > self.rect[1]:
-            draw_rounded_rect(self.surface, self.rect, (190,190,190),15)
+        if mouse[0] == 1 or mouse[0] == 2:
+            draw_rounded_rect(self.surface, self.rect, (180,180,180),15)
         else:
-            draw_rounded_rect(self.surface, self.rect, (230,230,230),15)
+            draw_rounded_rect(self.surface, self.rect, (255,255,255),15)
 
         self.circular16 = pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",16)
         self.circular12 = pygame.freetype.Font("/home/pi/.fonts/CircularStd-Bold.ttf",12)        
         self.circular12.render_to(self.surface, (60, 116+80*self.id), self.package, (50,50,50))        
         self.circular16.render_to(self.surface, (60, 130+80*self.id), self.service, (0,0,0))
-        self.button.render_button(mouse)
+        self.button.render_button(mouse[1])
         self.keyboard.update(events)
         if self.window:
             self.keyboard.draw(self.surface)
@@ -162,9 +164,9 @@ class ServiceMenuItem:
 
     def check_click(self, mouse):
 
-        if self.button.check_click(mouse):
+        if self.button.check_click(mouse[1]):
             return 2
-        elif mouse[0] < self.rect[0]+self.rect[2] and mouse[0]> self.rect[0] and mouse[1] < self.rect[1]+self.rect[3] and mouse[1] > self.rect[1]:
+        elif mouse[0] == 2:
             self.popup()
             return 1
         else:
@@ -198,6 +200,8 @@ class Interface:
     def __init__(self, pygame):
         self.odom_sub = rospy.Subscriber("odom", Odometry, self.odomCallback)
         self.js_sub = rospy.Subscriber("joint_states", JointState, self.jsCallback)
+        self.button_sub = rospy.Subscriber("button_matrix", Int32MultiArray, self.buttonCallback)
+
         self.enc = [0,0]
         self.odom = Pose()
         self.odom.position.x = 0
@@ -207,6 +211,7 @@ class Interface:
         self.pygame.font.init()
         self.modules = rospy.get_param("/interface/modules")
         self.buttons = rospy.get_param("/interface/buttons")
+        self.button_matrix = []
 
         print("MOD:"+str(self.modules['odom']))
         print(self.pygame.font.match_font("CircularStd-Bold"))
@@ -235,7 +240,19 @@ class Interface:
         
     def jsCallback(self, msg):
         self.enc = msg.position
-
+    
+    def buttonCallback(self, msg):
+        row = []
+        self.button_matrix = []
+        data = np.asarray(msg.data)
+        for i in range(len(data)):
+            if data[i] == 100:
+                self.button_matrix.append(row)
+                row = []
+            else:
+                row.append(data[i])
+        print(self.button_matrix)
+        
     def reset(self):
 
         srv_rect = self.pygame.rect.Rect(20,20,270,self.height-40)
@@ -270,28 +287,28 @@ class Interface:
     def refresh(self):
         mouse = self.pygame.mouse.get_pos() 
         events = self.pygame.event.get()
-        for m in self.menu:
-            m.render(mouse, events)
-        for b in self.control_buttons:
-            b.render_button(mouse)
+        for m in range(len(self.menu)):
+            self.menu[m].render([self.button_matrix[0][m],self.button_matrix[1][m]], events)
+        for b in range(len(self.control_buttons)):
+            self.control_buttons[b].render_button(self.button_matrix[2][b])
         for event in events:
             if event.type==self.pygame.QUIT:
                 self.pygame.quit()
                 sys.exit()
             if event.type == self.pygame.MOUSEBUTTONDOWN: 
-                for m in self.menu:
-                    m.check_click(mouse)
+                for m in range(len(self.menu)):
+                    self.menu[m].check_click([self.button_matrix[0][m],self.button_matrix[1][m]])
                 for i in range(len(self.control_buttons)):
-                    if self.control_buttons[i].check_click(mouse):
-                        pubtype = 0
-                        if self.buttons['type'][i] == "Twist":
-                            pubtype = Twist
-                        if self.buttons['type'][i] == "Twist":
-                            print(self.buttons['publishes'][i]['linear']['x'])
-                            publishes = Twist(linear = Vector3(x = self.buttons['publishes'][i]['linear']['x'], y = self.buttons['publishes'][i]['linear']['y'], z = self.buttons['publishes'][i]['linear']['z']), angular = Vector3(x = self.buttons['publishes'][i]['angular']['x'], y = self.buttons['publishes'][i]['angular']['y'], z = self.buttons['publishes'][i]['angular']['z']))
+                    self.control_buttons[i].check_click(self.button_matrix[2][i])
+                    pubtype = 0
+                    if self.buttons['type'][i] == "Twist":
+                        pubtype = Twist
+                    if self.buttons['type'][i] == "Twist":
+                        print(self.buttons['publishes'][i]['linear']['x'])
+                        publishes = Twist(linear = Vector3(x = self.buttons['publishes'][i]['linear']['x'], y = self.buttons['publishes'][i]['linear']['y'], z = self.buttons['publishes'][i]['linear']['z']), angular = Vector3(x = self.buttons['publishes'][i]['angular']['x'], y = self.buttons['publishes'][i]['angular']['y'], z = self.buttons['publishes'][i]['angular']['z']))
 
-                        pub = rospy.Publisher(self.buttons['publisher'][i], pubtype, queue_size=0)
-                        pub.publish(publishes)
+                    pub = rospy.Publisher(self.buttons['publisher'][i], pubtype, queue_size=0)
+                    pub.publish(publishes)
                         
                     
         console_rect = self.pygame.rect.Rect(730,20,self.width-730-20,self.height-40)
