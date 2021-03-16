@@ -8,6 +8,7 @@
 - run any node to be tested on the robot
 
 ## Software
+![Interface](./interface.png "Interface")
 ### Modes of Usage
 ##### Mouse Control Mode
 - In this mode, the left joystick controls the mouse on the raspberry pi in the controller. 
