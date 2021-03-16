@@ -1,7 +1,7 @@
 # ros_controller
 
 ## Project Description
-The ROS Controller was created as a part of a MSR @ Northwestern winter project. The goal was to create a controller that can be easily customized to help ROS developers debug new applications and help regular robot technicians program new capabilities into existing applications.
+The ROS Controller was created as a part of a MSR @ Northwestern winter project. The goal was to create a controller that can be easily customized to help ROS developers debug new applications and help regular robot technicians program new capabilities into existing applications. Please see https://petercsauer.github.io/controller.html for more information.
 
 ## Usage Instructions
 - Connect the robot and controller to the same network
