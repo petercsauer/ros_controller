@@ -37,6 +37,17 @@
 - Developers can click the play button next to a service option to run that service with an autocompleted command (\t).
 - Developers can click the main section of the service module to input their own command to run.
 
+### Configurability
+##### Info Modules
+- Info modules can be configured in the modules.yaml file. 
+- Info modules can be removed or added depending on the setting in that file and the usage case of the developer
+
+##### Basic Remote
+- Action buttons can also be added through the modules.yaml file.
+- Each button has a publisher associated with it, and can publish a specific message which is configured by the developer in the modules.yaml file
+
+![Interface Modules](./interface_modules.png "Interface")
+
 ### Nodes
 ##### Interface
 - the interface node subscribes to useful rostopics (such as the robots pose or joint states)
